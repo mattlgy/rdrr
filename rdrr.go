@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	rdrr "github.com/mattlgy/rdrr/lib"
+	"strings"
 )
 
 type RedirTplOpts struct {
@@ -17,36 +18,68 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 
-	r.GET("/x/:slug", func(c *gin.Context) {
-		slug := c.Param("slug")
-		co, s := rdrr.Get(slug)
-		switch {
-		case co == nil, co.GetCount() < 0:
-			c.String(404, "oops")
-		case co.GetCount() == 0:
-			c.Redirect(303, co.GetURL())
-		case co.GetCount() > 0:
-			c.Redirect(303, "/x/"+s)
-		}
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "index.html", nil)
 	})
-	r.GET("/r/:slug", func(c *gin.Context) {
+	r.POST("/", func(c *gin.Context) {
+		dest := c.PostForm("dest")
+		str := c.PostForm("words")
+		words := strings.Split(str, " ")
+		slug := rdrr.AddDest(dest, words)
+		c.String(200, "http://rdrr.at/"+slug)
+	})
+
+	r.GET("/:slug", func(c *gin.Context) {
 		slug := c.Param("slug")
 		co, s := rdrr.Get(slug)
 		switch {
 		case co == nil, co.GetCount() < 0:
 			c.String(404, "oops")
 		case co.GetCount() == 0:
-			c.HTML(200, "redir.html", gin.H{
+			c.HTML(200, "redir.html", &gin.H{
 				"dest": co.GetURL(),
 				"word": co.GetWord(),
 			})
 		case co.GetCount() > 0:
-			c.HTML(200, "redir.html", gin.H{
-				"dest": "/r/" + s,
+			c.HTML(200, "redir.html", &gin.H{
+				"dest": "/" + s,
 				"word": co.GetWord(),
 			})
 		}
 	})
 
-	r.Run() // listen and server on 0.0.0.0:8080
+	/*
+		r.GET("/x/:slug", func(c *gin.Context) {
+			slug := c.Param("slug")
+			co, s := rdrr.Get(slug)
+			switch {
+			case co == nil, co.GetCount() < 0:
+				c.String(404, "oops")
+			case co.GetCount() == 0:
+				c.Redirect(303, co.GetURL())
+			case co.GetCount() > 0:
+				c.Redirect(303, "/x/"+s)
+			}
+		})
+		r.GET("/r/:slug", func(c *gin.Context) {
+			slug := c.Param("slug")
+			co, s := rdrr.Get(slug)
+			switch {
+			case co == nil, co.GetCount() < 0:
+				c.String(404, "oops")
+			case co.GetCount() == 0:
+				c.HTML(200, "redir.html", &gin.H{
+					"dest": co.GetURL(),
+					"word": co.GetWord(),
+				})
+			case co.GetCount() > 0:
+				c.HTML(200, "redir.html", &gin.H{
+					"dest": "/r/" + s,
+					"word": co.GetWord(),
+				})
+			}
+		})
+	*/
+
+	r.Run(":80")
 }
