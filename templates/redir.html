@@ -2,8 +2,8 @@
 	<head>
         <meta http-equiv="refresh" content="0.5;url={{ .dest }}" />
 	</head>
-	<body>
-        <a href="{{ .dest }}"><h1>{{ .word }}</h1></a>
-		<script> setTimeout(function() { window.location = '{{ .dest }}' }, 500) </script>
+	<body style="text-align:center;padding:30px;font-family: Sans-Serif;">
+        <a style="text-decoration:none;color:black;font-size:32px;" href="{{ .dest }}">{{ .word }}</a>
+        <script> setTimeout(function() { window.location = '{{ .dest }}' }, 500) </script>
 	</body>
 </html>
