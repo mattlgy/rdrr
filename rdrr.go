@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	rdrr "github.com/mattlgy/rdrr/lib"
 	"strings"
@@ -12,9 +11,6 @@ type RedirTplOpts struct {
 }
 
 func main() {
-	slug := rdrr.AddDest("http://example.com", []string{"this", "is", "a", "test"})
-	fmt.Println(slug)
-
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 
@@ -23,9 +19,24 @@ func main() {
 	})
 	r.POST("/", func(c *gin.Context) {
 		dest := c.PostForm("dest")
+		if len(dest) > 256 {
+			c.String(400, "URL too long")
+			return
+		}
+
 		str := c.PostForm("words")
+		if len(str) > 256 {
+			c.String(400, "Text too long")
+			return
+		}
 		words := strings.Split(str, " ")
+		if len(words) > 32 {
+			c.String(400, "Text too long")
+			return
+		}
+
 		slug := rdrr.AddDest(dest, words)
+
 		c.String(200, "http://rdrr.at/"+slug)
 	})
 
@@ -47,39 +58,6 @@ func main() {
 			})
 		}
 	})
-
-	/*
-		r.GET("/x/:slug", func(c *gin.Context) {
-			slug := c.Param("slug")
-			co, s := rdrr.Get(slug)
-			switch {
-			case co == nil, co.GetCount() < 0:
-				c.String(404, "oops")
-			case co.GetCount() == 0:
-				c.Redirect(303, co.GetURL())
-			case co.GetCount() > 0:
-				c.Redirect(303, "/x/"+s)
-			}
-		})
-		r.GET("/r/:slug", func(c *gin.Context) {
-			slug := c.Param("slug")
-			co, s := rdrr.Get(slug)
-			switch {
-			case co == nil, co.GetCount() < 0:
-				c.String(404, "oops")
-			case co.GetCount() == 0:
-				c.HTML(200, "redir.html", &gin.H{
-					"dest": co.GetURL(),
-					"word": co.GetWord(),
-				})
-			case co.GetCount() > 0:
-				c.HTML(200, "redir.html", &gin.H{
-					"dest": "/r/" + s,
-					"word": co.GetWord(),
-				})
-			}
-		})
-	*/
 
 	r.Run(":80")
 }
